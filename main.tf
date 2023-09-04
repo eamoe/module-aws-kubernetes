@@ -95,3 +95,25 @@ resource "aws_iam_role_policy_attachment" "ms-node-AmazonEC2ContainerRegistryRea
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
   role       = aws_iam_role.ms-node.name
 }
+
+resource "aws_eks_node_group" "ms-node-group" {
+  cluster_name    = aws_eks_cluster.ms-up-running.name
+  node_group_name = "microservices"
+  node_role_arn   = aws_iam_role.ms-node.arn
+  subnet_ids      = var.nodegroup_subnet_ids
+
+  scaling_config {
+    desired_size = var.nodegroup_desired_size
+    max_size     = var.nodegroup_max_size
+    min_size     = var.nodegroup_min_size
+  }
+
+  disk_size      = var.nodegroup_disk_size
+  instance_types = var.nodegroup_instance_types
+
+  depends_on = [
+    aws_iam_role_policy_attachment.ms-node-AmazonEKSWorkerNodePolicy,
+    aws_iam_role_policy_attachment.ms-node-AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.ms-node-AmazonEC2ContainerRegistryReadOnly,
+  ]
+}
