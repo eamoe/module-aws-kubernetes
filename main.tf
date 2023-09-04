@@ -29,3 +29,21 @@ resource "aws_iam_role_policy_attachment" "ms-cluster-AmazonEKSClusterPolicy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
   role       = aws_iam_role.ms-cluster.name
 }
+
+resource "aws_security_group" "ms-cluster" {
+  name        = local.cluster_name
+  description = "Cluster communication with worker nodes"
+  vpc_id      = var.vpc_id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    self        = true
+  }
+
+  tags = {
+    Name = "ms-up-running"
+  }
+}
