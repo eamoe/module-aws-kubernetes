@@ -117,3 +117,34 @@ resource "aws_eks_node_group" "ms-node-group" {
     aws_iam_role_policy_attachment.ms-node-AmazonEC2ContainerRegistryReadOnly,
   ]
 }
+
+# Create a kubeconfig file based on the cluster that has been created
+resource "local_file" "kubeconfig" {
+  content  = <<KUBECONFIG
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: ${aws_eks_cluster.ms-up-running.certificate_authority.0.data}
+    server: ${aws_eks_cluster.ms-up-running.endpoint}
+  name: ${aws_eks_cluster.ms-up-running.arn}
+contexts:
+- context:
+    cluster: ${aws_eks_cluster.ms-up-running.arn}
+    user: ${aws_eks_cluster.ms-up-running.arn}
+  name: ${aws_eks_cluster.ms-up-running.arn}
+current-context: ${aws_eks_cluster.ms-up-running.arn}
+kind: Config
+preferences: {}
+users:
+- name: ${aws_eks_cluster.ms-up-running.arn}
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1alpha1
+      command: aws-iam-authenticator
+      args:
+        - "token"
+        - "-i"
+        - "${aws_eks_cluster.ms-up-running.name}"
+    KUBECONFIG
+  filename = "kubeconfig"
+}
