@@ -1,10 +1,16 @@
 provider "aws" {
-    region = var.aws_region
+  region = var.aws_region
 }
 
 locals {
-    cluster_name = "${var.cluster_name}-${var.env_name}"
+  cluster_name = "${var.cluster_name}-${var.env_name}"
 }
+
+# EKS Cluster Resources
+#  * IAM Role to allow EKS service to manage other AWS services
+#  * EC2 Security Group to allow networking traffic with EKS cluster
+#  * EKS Cluster
+#
 
 resource "aws_iam_role" "ms-cluster" {
   name = local.cluster_name
@@ -61,6 +67,13 @@ resource "aws_eks_cluster" "ms-up-running" {
     aws_iam_role_policy_attachment.ms-cluster-AmazonEKSClusterPolicy
   ]
 }
+
+
+#
+# EKS Worker Nodes Resources
+#  * IAM role allowing Kubernetes actions to access other AWS services
+#  * EKS Node Group to launch worker nodes
+#
 
 resource "aws_iam_role" "ms-node" {
   name = "${local.cluster_name}.node"
@@ -148,3 +161,28 @@ users:
     KUBECONFIG
   filename = "kubeconfig"
 }
+/*
+#  Use data to ensure that the cluster is up before we start using it
+data "aws_eks_cluster" "msur" {
+  name = aws_eks_cluster.ms-up-running.id
+}
+
+# Use kubernetes provider to work with the kubernetes cluster API
+provider "kubernetes" {
+  load_config_file       = false
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.msur.certificate_authority.0.data)
+  host                   = data.aws_eks_cluster.msur.endpoint
+  exec {
+    api_version = "client.authentication.k8s.io/v1alpha1"
+    command     = "aws-iam-authenticator"
+    args        = ["token", "-i", "${data.aws_eks_cluster.msur.name}"]
+  }
+}
+
+# Create a namespace for microservice pods 
+resource "kubernetes_namespace" "ms-namespace" {
+  metadata {
+    name = var.ms_namespace
+  }
+}
+*/
