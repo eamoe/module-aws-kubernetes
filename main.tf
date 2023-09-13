@@ -50,11 +50,11 @@ resource "aws_security_group" "ms-cluster" {
   }
 
   tags = {
-    Name = "ms-up-running"
+    Name = "microservices-project"
   }
 }
 
-resource "aws_eks_cluster" "ms-up-running" {
+resource "aws_eks_cluster" "microservices-project" {
   name     = local.cluster_name
   role_arn = aws_iam_role.ms-cluster.arn
 
@@ -110,7 +110,7 @@ resource "aws_iam_role_policy_attachment" "ms-node-AmazonEC2ContainerRegistryRea
 }
 
 resource "aws_eks_node_group" "ms-node-group" {
-  cluster_name    = aws_eks_cluster.ms-up-running.name
+  cluster_name    = aws_eks_cluster.microservices-project.name
   node_group_name = "microservices"
   node_role_arn   = aws_iam_role.ms-node.arn
   subnet_ids      = var.nodegroup_subnet_ids
@@ -137,19 +137,19 @@ resource "local_file" "kubeconfig" {
 apiVersion: v1
 clusters:
 - cluster:
-    certificate-authority-data: ${aws_eks_cluster.ms-up-running.certificate_authority.0.data}
-    server: ${aws_eks_cluster.ms-up-running.endpoint}
-  name: ${aws_eks_cluster.ms-up-running.arn}
+    certificate-authority-data: ${aws_eks_cluster.microservices-project.certificate_authority.0.data}
+    server: ${aws_eks_cluster.microservices-project.endpoint}
+  name: ${aws_eks_cluster.microservices-project.arn}
 contexts:
 - context:
-    cluster: ${aws_eks_cluster.ms-up-running.arn}
-    user: ${aws_eks_cluster.ms-up-running.arn}
-  name: ${aws_eks_cluster.ms-up-running.arn}
-current-context: ${aws_eks_cluster.ms-up-running.arn}
+    cluster: ${aws_eks_cluster.microservices-project.arn}
+    user: ${aws_eks_cluster.microservices-project.arn}
+  name: ${aws_eks_cluster.microservices-project.arn}
+current-context: ${aws_eks_cluster.microservices-project.arn}
 kind: Config
 preferences: {}
 users:
-- name: ${aws_eks_cluster.ms-up-running.arn}
+- name: ${aws_eks_cluster.microservices-project.arn}
   user:
     exec:
       apiVersion: client.authentication.k8s.io/v1alpha1
@@ -157,14 +157,14 @@ users:
       args:
         - "token"
         - "-i"
-        - "${aws_eks_cluster.ms-up-running.name}"
+        - "${aws_eks_cluster.microservices-project.name}"
     KUBECONFIG
   filename = "kubeconfig"
 }
 /*
 #  Use data to ensure that the cluster is up before we start using it
 data "aws_eks_cluster" "msur" {
-  name = aws_eks_cluster.ms-up-running.id
+  name = aws_eks_cluster.microservices-project.id
 }
 
 # Use kubernetes provider to work with the kubernetes cluster API
