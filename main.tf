@@ -41,6 +41,15 @@ resource "aws_security_group" "ms-cluster" {
   description = "Cluster communication with worker nodes"
   vpc_id      = var.vpc_id
 
+  ingress {
+    description = "Inbound traffic from within the security group"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    self        = true
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
